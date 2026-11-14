@@ -23,6 +23,7 @@ namespace Cliente
         byte[] buffer;
         string message = "";
         private const int LargoTrama = 24;
+        private const int Capacidad = 67;
 
         public Frm_Cliente()
         {
@@ -95,7 +96,7 @@ namespace Cliente
                 {
                     MessageBox.Show(Exc.ToString());
                 }
-
+            pnlAsientos.Visible = true;
         }
 
         private void Bnt_Enviar_Click(object sender, EventArgs e)
@@ -193,13 +194,13 @@ namespace Cliente
             txtBoxFila2.Text = fila2;
 
             //-6
-            string monto = "Monto de la transacción: ?" + MontoTransaccion.ToString("N0");
+            string monto = "Monto de la transacción: " + MontoTransaccion.ToString("N0") + " Colones";
             txtBoxMonto.Text = monto;
 
 
 
             //-7
-
+            PintarMapa(Fila1, Asientos1, Fila2, Asientos2, AsientosDisponibles);
         }
 
         private string GetAsientos(string asientos)
@@ -207,6 +208,72 @@ namespace Cliente
             return string.Join(", ", asientos.Where(c => c != '0'));
         }
 
-        
+        private void btnLimpiar_Click(object sender, EventArgs e)
+        {
+            Txt_Mensaje.Clear();
+            txtRuta.Clear();
+            txtBoxFila1.Clear();
+            txtBoxFila2.Clear();
+            txtBoxMonto.Clear();
+            lblEstado.Text = "";
+            pnlAsientos.Visible = false;
+        }
+
+
+        //MAPA BUS
+
+        //-1 
+        private int NumeroAsiento(string nombre)
+        {
+            int fila = nombre[0] - 'A';
+            int asiento = int.Parse(nombre.Substring(1));
+            return (fila * 5) + asiento;
+        }
+
+        //-2
+        private void AgregarAsientos(List<int> lista, string fila, string asientos)
+        {
+            int f = int.Parse(fila);
+
+            if (f == 0)
+            {
+                return;
+            }
+
+            foreach (char ch in asientos)
+            {
+                if (ch != '0')
+                {
+                    lista.Add((f - 1) * 5 + (ch - '0'));
+                }
+            }
+        }
+
+        //-3
+        private void PintarMapa(string fila1, string asientos1, string fila2, string asientos2, int disponibles)
+        {
+            var mios = new List<int>();
+            AgregarAsientos(mios, fila1, asientos1);
+            AgregarAsientos(mios, fila2, asientos2);
+
+            int vendidos = Capacidad - disponibles;
+            int rojos = Math.Max(0, vendidos - mios.Count);
+
+            foreach (Control c in pnlAsientos.Controls)
+            {
+                if (c is Button b && b.Name.Length > 0 && char.IsLetter(b.Name[0]))
+                {
+                    int n = NumeroAsiento(b.Name);
+
+                    if (mios.Contains(n)) b.BackColor = Color.RoyalBlue;
+
+                    else if (n <= rojos) b.BackColor = Color.Red;
+
+                    else b.BackColor = Color.LightGreen;
+                }
+            }
+
+            pnlAsientos.Visible = true;
+        }
     } // Close Class    
 } //Close Namespace
